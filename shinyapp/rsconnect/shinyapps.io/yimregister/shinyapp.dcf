@@ -1,0 +1,10 @@
+name: shinyapp
+title:
+username:
+account: yimregister
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1962698
+bundleId: 3013335
+url: https://yimregister.shinyapps.io/shinyapp/
+when: 1586893386.28064
