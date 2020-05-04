@@ -1,7 +1,10 @@
+#forced choice Yes/No
 div(class = 'container',
-    div(class = 'col-sm-2'),
+    
     div(class = 'col-sm-8',
-        textAreaInput("postquestion1", "After looking at your own Ad Preferences in the tutorial, how do you think Facebook collects your data?", ""),
+        h2("Would you be willing to share your anonymized data of what Facebook thinks you're interested in?"),
+        radioButtons("postquestion1","" , "",choices=c("Yes","No")),
+        br(),
         actionButton("block_twopost", "Next",style="font-size:17pt;"),
         br()
     )

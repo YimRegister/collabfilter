@@ -1,8 +1,10 @@
+#open ended, baseline
 div(class = 'container',
-    div(class = 'col-sm-2'),
+    
     div(class = 'col-sm-8',
-        textInput("question2", "How much money (in USD) would you want to be paid to share your anonymized Facebook Ad Preference data with a company?"),
-        textInput("question2b","How much money (in USD) would you want to be paid to share your de-anonymized Facebook Ad Preference data with a company?"),
+        h2("How do you think Facebook comes up with what you might be interested in? List as many ways as possible."),
+        h3("e.g. they gather data from what you click on"),
+        textAreaInput("question2", "","",rows=10,cols=50),
         actionButton("block_three", "Next",style="font-size:17pt;"),
         br()
     )

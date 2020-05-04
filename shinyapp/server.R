@@ -1,5 +1,6 @@
 library(shiny)
 library(shinythemes)
+library(shinyjs)
 library(DT)
 library(ggplot2)
 library(car)
@@ -14,7 +15,30 @@ library(mongolite)
 library(data.table)
 library(visNetwork)
 
+jscode <- "
+shinyjs.disableTab = function(name) {
+  var tab = $('.nav li a[data-value=' + name + ']');
+  tab.bind('click.tab', function(e) {
+    e.preventDefault();
+    return false;
+  });
+  tab.addClass('disabled');
+}
 
+shinyjs.enableTab = function(name) {
+  var tab = $('.nav li a[data-value=' + name + ']');
+  tab.unbind('click.tab');
+  tab.removeClass('disabled');
+}
+"
+
+css <- "
+.nav li a.disabled {
+  background-color: #aaa !important;
+  color: #333 !important;
+  cursor: not-allowed !important;
+  border-color: #aaa !important;
+}"
 
 
 options(mongodb = list(
@@ -63,7 +87,9 @@ cosine_similarity <- function(a,b){
   crossprod(a,b)/sqrt(crossprod(a) * crossprod(b))
 }
 
+##########################################################################################
 shinyServer(function(input, output,session) {
+  
  
 values <- reactiveValues( presurvey_data=NULL
   
@@ -73,8 +99,15 @@ images_and_names <- reactiveValues( imagesdf=NULL
                           
 )
 
+observeEvent(input$adsfile,{
+  shinyjs::show("arrange")
+  shinyjs::show("choose")
+})
  makedata <- reactive({
     req(input$adsfile)
+   
+    
+   
     tryCatch(
       {
         
@@ -86,6 +119,7 @@ images_and_names <- reactiveValues( imagesdf=NULL
         rows <- sample(nrow(thedata))
         shuffle <- as.data.frame(thedata[rows,])
         names(shuffle)<-c("Interest")
+        
        return(shuffle)
         
         
@@ -98,7 +132,10 @@ images_and_names <- reactiveValues( imagesdf=NULL
       
       
     )
+   
   })
+ 
+
  
 
     
@@ -119,7 +156,7 @@ output$maketable <- DT::renderDataTable(
 
 
 output$renderuserimage <- output$renderuserimage2 <- renderUI({
-  srcstring = "youarehere.png"
+  srcstring = img()
   
   if(!is.null(input$userphoto)){
     req(input$userphoto)
@@ -129,11 +166,11 @@ output$renderuserimage <- output$renderuserimage2 <- renderUI({
     
   }
   else{
-    srcstring="youarehere.png"
+    srcstring=img()
   }
   
   
-  tags$img(src = srcstring,width="100px")
+  div(tags$img(src = srcstring,width="100px"),height="100px",class="cover")
   
 })
 
@@ -142,14 +179,14 @@ output$renderuserimage <- output$renderuserimage2 <- renderUI({
 regenerate_avatar <- function(){
   friend_imgs <- c("friend1.png","friend2.png","friend3.png","friend4.png","friend5.png","friend6.png","friend7.png","friend8.png","friend9.png","friend10.png",
                    "friend11.png","friend12.png","friend13.png","friend14.png","friend15.png","friend16.png","friend17.png","friend18.png","friend19.png","friend20.png",
-                   "friend21.png","friend22.png","friend23.png","friend24.png")
+                   "friend21.png","friend22.png","friend23.png","friend24.png","friend25.png","friend26.png","friend27.png")
   
   choices <- sample(friend_imgs,3)
   labels <- c("Friend1","Friend2","Friend3")
   
   images_and_names$imagesdf$Name = c(input$name1,input$name2,input$name3)
   images_and_names$imagesdf$Image = choices
-  View(images_and_names$imagesdf)
+  
   
 
   output$friend1_image <- output$friend1_image2 <-renderUI({
@@ -214,18 +251,18 @@ output$collect <-output$collect2<- renderPrint({
 observeEvent(input$name1,
              { 
                images_and_names$imagesdf$Name[1] = input$name1
-               View(images_and_names$imagesdf)
+              
              })
 observeEvent(input$name2,
              { 
                images_and_names$imagesdf$Name[2] = input$name2
-               View(images_and_names$imagesdf)
+               
              })
 
 observeEvent(input$name3,
              { 
                images_and_names$imagesdf$Name[3] = input$name3
-               View(images_and_names$imagesdf)
+               
              })
 
 
@@ -236,8 +273,13 @@ RollDie <- reactive({
 sample1 <- reactive({
   N = RollDie()[1]
   rest = OPTIONS - N
+  
+  restdata <- makedata()%>%
+    filter(!(row_number() %in% input$maketable_rows_selected))
+  
+  
   sameasyou <- sample(as.character(makedata()$Interest[input$maketable_rows_selected]),N,replace=F)
-  therest <- sample(as.character(makedata()$Interest),rest,replace=F)
+  therest <- sample(as.character(restdata$Interest),rest,replace=F)
   sample <- c(sameasyou,therest)
   return(sort(sample))
 })
@@ -246,8 +288,10 @@ sample1 <- reactive({
 sample2 <- reactive({
   N = RollDie()[2]
   rest = OPTIONS - N
+  restdata <- makedata()%>%
+    filter(!(row_number() %in% input$maketable_rows_selected))
   sameasyou <- sample(as.character(makedata()$Interest[input$maketable_rows_selected]),N,replace=F)
-  therest <- sample(as.character(makedata()$Interest),rest,replace=F)
+  therest <- sample(as.character(restdata$Interest),rest,replace=F)
   sample <- c(sameasyou,therest)
   return(sort(sample))
 })
@@ -255,8 +299,10 @@ sample2 <- reactive({
 sample3 <- reactive({
   N = RollDie()[3]
   rest = OPTIONS - N
+  restdata <- makedata()%>%
+    filter(!(row_number() %in% input$maketable_rows_selected))
   sameasyou <- sample(as.character(makedata()$Interest[input$maketable_rows_selected]),N,replace=F)
-  therest <- sample(as.character(makedata()$Interest),rest,replace=F)
+  therest <- sample(as.character(restdata$Interest),rest,replace=F)
   sample <- c(sameasyou,therest)
   return(sort(sample))
   })
@@ -402,7 +448,22 @@ get_cosine_similarity <- reactive({
   data <- as.data.frame(data)
   data <- data %>%
     arrange(desc(cossim))
+  
+  
+  
+  
   colnames(data) <- c("Name1", "Name2", "Similarity (0-1)")
+  data$Name1 <- as.character(data$Name1)
+  data$Name2 <- as.character(data$Name2)
+  
+  if(data$Name2[1] != input$user){
+    
+     tempfriendname <- str_extract(data$Name2[1],"(\\w+)") 
+     data$Name1[1] = tempfriendname
+     data$Name2[1] = input$user
+    
+     
+  }
   
   #rank by cosine similarity
  
@@ -419,7 +480,7 @@ output$mostsimilar <- renderPrint({
   d<- get_cosine_similarity()[1,]
   
   
-  name <- str_extract(d$Name1,"(\\w+)") 
+  name <- str_extract(d$Name1,"(\\w+)") #we need to make sure name 1 is the friend and name2 is yourself
   othername <- str_extract(d$Name2,"(\\w+)") 
   similarity <-round( d[3],2)
   
@@ -448,7 +509,7 @@ output$recommend <- renderPrint({
   
   
   name <- str_extract(d$Name1,"(\\w+)") 
-  othername <- str_extract(d$Name2,"(\\w+)") 
+  othername <- str_extract(d$Name2,"(\\w+)") #needs to be me
   similarity <-round( d[3],2)
   
   cat(
@@ -569,66 +630,97 @@ output$network <-renderVisNetwork({
 
   
   incommon <- merge(similarity2(),similarity1(),by="prefs")
-  View(incommon)
+  # these should be mapped to both users, because they are both interested in them
+ 
   
   nodes <- data.frame(id = 1:length(incommon$prefs), label = incommon$prefs, 
-                      group = incommon$friends.x) #me
+                      group = "In Common",font.size=c(20)) #me
   
-  length <- (length(similarity2()$friends)+length(similarity1()$friends))
-  ids<- seq(length(similarity2()$friends)+1,length)
+ 
   
-  nodes2<-data.frame(id = ids, label = similarity1()$prefs, 
-                     group = similarity1()$friends) #friend
+  #poorly named, overlap is the suggests
+  
+  overlap <- anti_join(similarity1(),similarity2(),by="prefs")
+  
+  
+  length <- (length(overlap$prefs)+length(incommon$prefs)) #total length of dataframe
+  ids<- seq(length(incommon$prefs)+1,length)
+  
+  
+ 
+  nodes2<-data.frame(id = ids, label = overlap$prefs, 
+                     group = "Suggest",font.size=c(20)) #friend
+  
   
   nodes <- rbind(nodes,nodes2)
 
   nodes$label <- as.character(nodes$label)
   nodes$group <- as.character(nodes$group)
   
-  friend1 <- c(length+1,as.character(similarity1()$friends[1]),"firstfriend") #friend
+  #friend1 ID is length+1
+  friend1 <- c(length+1,as.character(similarity1()$friends[1]),"firstfriend",font.size=c(20)) #friend
   nodes <- rbind(nodes,friend1)
-  friend2 <- c(length+2,as.character(similarity2()$friends[1]),"secondfriend") #me
+  
+  #my ID is length+2
+  friend2 <- c(length+2,as.character(similarity2()$friends[1]),"secondfriend",font.size=c(20)) #me
   nodes <- rbind(nodes,friend2)
   View(nodes)
   
   
   
-  #for all the edges in list 1, go to me
-  edges <- data.frame(from = 1:length(incommon$prefs), to = OPTIONS*2+2,label="",color="black",arrows="") #me
+  #for all the incommon, they go to both friends
+  edges <- data.frame(from = 1:length(incommon$prefs), to = length+2,label="",color="black",arrows="",dashes=c("FALSE"),font.size=c(20)) #me
+  edges2 <- data.frame(from = 1:length(incommon$prefs), to = length+1,label="",color="black",arrows="",dashes=c("FALSE"),font.size=c(20)) #friend
+  edges <- rbind(edges,edges2)
   
-  #for all the edges in list 2, go to friend
-  edges2 <- data.frame(from=ids, to=OPTIONS*2+1,label="",color="black",arrows="") #friend
-  edges <-rbind(edges,edges2)
+  #the suggestions belong to the friend, and will be suggested to me
   
+  ids <- nodes$id[nodes$group=="Suggest"]
+  print(ids)
   
-  #for overlap, suggest from friend to me
-  
-  suggest<- anti_join(nodes[nodes$group==as.character(similarity1()$friends[1]),],nodes[nodes$group==as.character(similarity2()$friends[1]),],by="label")
-  View(suggest)
-  edges3<-data.frame(from=suggest$id,to=OPTIONS*2+2,label="Suggest",color="#39D11A",arrows="to")
+  edges3<-data.frame(from=ids,to=length+1,label="",color="black",arrows="",dashes=c("FALSE"),font.size=c(20))
   edges <-rbind(edges,edges3)
   
-  edges4<-data.frame(from=OPTIONS*2+1,to=OPTIONS*2+2,label="Similar",color="red",arrows="to;from")
+  edges4<-data.frame(from=ids,to=length+2,label="Suggest",color="#39D11A",arrows="to",dashes=c("FALSE"),font.size=c(20))
   edges <-rbind(edges,edges4)
   
+ 
+  
+  edges$dashes <- as.logical(edges$dashes)
+  #bug, we need to ENSURE myname is secondfriend
+  View(edges)
   
   imageforfriend <- images_and_names$imagesdf$Image[images_and_names$imagesdf$Name == similarity1()$friends[1]]
   
   
-  visNetwork(nodes,edges) %>%
-    visGroups(groupname = as.character(similarity1()$friends[1]), shape = "box",color="lightgray") %>%
-    visGroups(groupname = as.character(similarity2()$friends[1]), shape = "box",color="lightgray") %>%
-    visGroups(groupname = "firstfriend", shape = "circularImage", image=imageforfriend) %>%
-    visGroups(groupname = "secondfriend", shape = "circularImage", image="youarehere.png") %>%
+
+  
+ graph <- visNetwork(nodes,edges,width="100%") %>%
+    visEdges(dashes = TRUE)%>%
+    visGroups(groupname = "In Common",font.size=c(20)) %>%
+    visGroups(groupname = "Suggest",color="#39D11A",font.size=c(20)) %>%
+    visGroups(groupname = "firstfriend", shape = "circularImage", image=imageforfriend,size=50) %>%
+    visGroups(groupname = "secondfriend", shape = "circularImage", image=img(),size=50) %>%
     #visHierarchicalLayout()%>%
     visNodes(shapeProperties = list(useBorderWithImage = TRUE))%>%
     visOptions(selectedBy = "group")%>%
-    visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = TRUE) %>%
+    visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = F) %>%
     visOptions(highlightNearest = list(enabled =TRUE, degree = 2, hover = T)) %>%
-    visLayout(randomSeed = 5) %>%
+    visLayout(randomSeed = 4, improvedLayout = TRUE) %>%
     addFontAwesome()%>%
     visPhysics(solver = "forceAtlas2Based",
-               forceAtlas2Based = list(gravitationalConstant = -100))
+               forceAtlas2Based = list(gravitationalConstant = -300))
+ 
+ visExport(
+   graph,
+   type = "png",
+   name = "mynetwork",
+   label = "Export as png",
+   background = "#fff",
+   float = "right",
+   style = "font-size:17pt;background-color:black;color:white;margin-top:2%;margin-right:20%;align:center;",
+   loadDependencies = TRUE
+ )
   
   
 })
@@ -637,7 +729,7 @@ output$network <-renderVisNetwork({
 output$matrix <- DT::renderDataTable(
   DT::datatable({
     make_matrix()
-  },options=list(pageLength=18,sDom  = '<"top">lrt<"bottom">ip'),class = 'cell-border stripe',rownames = FALSE))
+  },options=list(pageLength=21,sDom  = '<"top">lrt<"bottom">ip'),class = 'cell-border stripe',rownames = FALSE))
 
 #get the similar people's images
 
@@ -650,21 +742,12 @@ output$similarimage1 <- renderUI({
 
 
 output$similarimage2 <- renderUI({
-  srcstring = "youarehere.png"
-  tags$img(src = srcstring,width="100px")
+  srcstring = img()
+  div(tags$img(src = srcstring,width="100px"),class="cover")
   
 })
 # the choosing which pair they think is the most similar, needs to be populated with the names and correct answer
-observe({
-  
-  x <- c()
-  # Can also set the label and select items
-  updateRadioButtons(session, "choosepair2",
-                     label = paste(""),
-                     choices = x,
-                     selected = x
-  )
-})
+
 
 
 question_one <- function(...) {
@@ -696,7 +779,7 @@ render_page <- function(...,f, title = "test_app") {
 presurvey <- function(...) {
   args <- list(...)
   div(class = 'container', id = "presurvey",
-      div(class = 'col-sm-2'),
+     
       div(class = 'col-sm-8',
           h1("Survey"),
           p("Before exploring your data, please complete the following survey. "),
@@ -722,19 +805,12 @@ presurvey <- function(...) {
   
   observeEvent(input$block_three, {
     
-    output$pre <- render_page(f = question_three)
+    output$pre <- render_page(f = thanks)
     
     
   })
   
-  observeEvent(input$block_four, {
-    
-    
-    output$pre <- render_page(f = thanks)
-    
-    
-    
-  })
+  
  
   create_unique_ids <- function( char_len = 7){
    
@@ -750,18 +826,38 @@ presurvey <- function(...) {
   }
   
   
+  img <- reactive({
+    f <- input$myFile
+    if (is.null(f)){
+      return("youarehere.png") }
+    else{
+    b64 <- base64enc::dataURI(file = f$datapath, mime = "image/png")
+    return(b64)}
+  })
+  
+  output$uploadedimage <-output$uploadedimage2 <-output$uploadedimage3<-renderUI({
+    req(img())
+    div(tags$img(src = img(),width="100px"),class="cover")
+  })
+  
+
+  
   
   observeEvent(input$completed, {
     id <- create_unique_ids()
     print(id)
-    values$presurvey_data <- data.frame(matrix(ncol = 5, nrow = 0))
+    values$presurvey_data <- data.frame(matrix(ncol = 8, nrow = 0))
     names <- c(
-      'Subject', 'WillingtoShare' ,'AnonymizedUSD' ,'DeanonymizedUSD' ,'PreWritein')
+      'Subject', 'Researchers', 'Marketing', 'OtherApps', 'Political', 'Government', 'Other'  ,'PreHowReccomend')
     colnames(values$presurvey_data) <- names
     
     
-    row <- c(id,input$question1,input$question2,input$question2b,input$question3)
+    row <- c(id,input$checkbox1, input$checkbox2, input$checkbox3, input$checkbox4, input$checkbox5, input$writein, input$question2)
     values$presurvey_data[1, ] <-row
+    
+    
+    View(values$presurvey_data)
+    
     
     updateTabsetPanel(session, "thenav",
                       selected = "step1")
@@ -777,7 +873,6 @@ postquestion_one <- function(...) {
   postsurvey <- function(...) {
     args <- list(...)
     div(class = 'container', id = "postsurvey",
-        div(class = 'col-sm-2'),
         div(class = 'col-sm-8',
             h1("Please complete this post survey."),
             p("In order to be compensated for this study, please fill out a few questions after completing the tutorial. "),
@@ -798,7 +893,6 @@ postquestion_one <- function(...) {
   
   
   
-  
 
   
   observeEvent(input$homenext, {
@@ -810,6 +904,7 @@ postquestion_one <- function(...) {
     
   })
   observeEvent(input$intronext, {
+    
     updateTabsetPanel(session, "thenav",
                       selected = "presurvey")
     
@@ -818,6 +913,9 @@ postquestion_one <- function(...) {
   })
   
   observeEvent(input$step2next, {
+    updateRadioButtons(session,"whichradio",
+    choices = c(input$name1,input$name2,input$name3, "I'm not sure", "None")
+  )
     updateTabsetPanel(session, "thenav",
                       selected = "step3")
     

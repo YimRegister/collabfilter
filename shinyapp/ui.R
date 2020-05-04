@@ -1,3 +1,4 @@
+library(visNetwork)
 library(shiny)
 library(shinythemes)
 library(DT)
@@ -16,10 +17,9 @@ library(shinyMatrix)
 
 
 
-#m <- matrix(runif(12), 6, 3, dimnames = list(c("a","b","c","d","e","f"), c("x", "y","z"))) 
-
 
 shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
+                  includeCSS("style.css"),
                   tags$head(
                           tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
                   ),
@@ -31,17 +31,19 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  fluidRow(column(tags$img(src="lookingdata.png",width="100px",height="100px"),width=2),
                           column(
                                   
+                                  
                                   br(),
                                   h2(" What does Facebook think you're interested in?",style="color:black;background-color:white;padding:15px;border-radius:10px"),
                                   
                                   
-                                  h4("This lesson will help you learn machine learning principles on your own Facebook data.",style="color:black;background-color:white;padding:15px;border-radius:10px"),
+                                  h4("This lesson will help you learn about algorithms in the world on your own Facebook data.",style="color:black;background-color:white;padding:15px;border-radius:10px"),
                                   
-                                  width=7),
+                                  width=8),
                           ),
                  hr(),
                  
-                 fluidRow(column(
+                 fluidRow(column(br(),width=2),
+                          column(
                          br(),
                          
                          p("You can download a zip file of your data by following these instructions:",
@@ -62,11 +64,11 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                         p("Extract the zip file and look for the folder 'ads_and_businesses'. Don't look at anything yet."),
                         img(src="ads_interests.png",width="50%"),
                         br(),br(),
-                        p("We do not save any of your Facebook data for this research study. It is for you to look at."),
+                        p("We do not save any of your Facebook data for this research study. It is for you to look at only."),
                         br(),
                         actionButton("homenext", "Next",style="margin-bottom:4%;font-size:17pt;"),
                         br(),
-                         width=11,offset=1),
+                         width=8),
                          
                           
                       
@@ -78,17 +80,15 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
         ###############################################################################################
         tabPanel(title="Intro",value="intro",
          column(
-                h4("When you download your Facebook Data, you get", em(" a lot "), "of data. This lesson will help you to explore:",align="left"),
-                br(),
-                tags$ul(
-                        tags$li(p("What Facebook thinks you're interested in")), 
-                        tags$li(p("What kinds of computations can be done on that data")),
-                        tags$li(p("A common algorithm called 'collaborative filtering' used for generating recommendations")), 
-                        align="left"
-                ),
-               
+                h2("Facebook collects a lot of data about you. They use this data to organize your news feed, recommend advertisements, suggest new friends, and more.",align="left"),
+                 strong("We do not save any of your Facebook data for this research study. It is for you to look at only."),
                 
                 br(),
+                
+                h3("To get started, upload an image you'd like to use for yourself. We do not save this either."),
+                fileInput("myFile", "Choose a file", accept = c('image/png', 'image/jpeg')),
+                uiOutput(outputId="uploadedimage"),
+                br(),br(),
                 actionButton("intronext", "Next",style="margin-bottom:4%;font-size:17pt;"),
                 br(),
                 
@@ -112,9 +112,10 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                       column(
                                                
                                                h1("What Facebook Thinks You're Interested In",style="color:black;text-align:center;"),
-                                                       
+                                               br(),
         
-                                               #div(img(src="collabfilter_realpython.webp",width="500px"),style="text-align:center;"),
+                                               uiOutput(outputId = "uploadedimage3",align="center"),
+                                               br(),
                                                width=12
                                                
                                       ),
@@ -126,6 +127,8 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                               h3("Upload the file titled ", strong('ads_and_businesses/ads_interests.json') ,br()," from the Facebook Download folder:",
                                               align="left"),
                                               br(),
+                                              img(src="adsinterest2.png",width="50%"),
+                                              br(),
                                               fileInput("adsfile", "Choose File",
                                                         multiple = FALSE,
                                                         accept = c(".json"))
@@ -134,10 +137,18 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
         
                                         
                                               fluidRow(
-                                                      column(5,offset=1, DT::dataTableOutput('maketable')),
-                                                      column(4, offset=1, h3("Choose the interests that actually apply to you by clicking on them. We will use this data for the rest of the tutorial. Choose 7."),verbatimTextOutput('x4'),
-                                                      hidden(actionButton("done","Done")))
-                                              )
+                                                      column(5,offset=2, 
+                                                             hidden(div(id="arrange",p("These have been arranged in random order. You can Search, Sort, and click on Interests to select them. To deselect, just click it again."))),br(),
+                                                             DT::dataTableOutput('maketable')),
+                                                             br(),br(),
+                                                      hidden(div(id="choose",column(5,
+                                                                                column(1,img(src="zooming-arrow.gif",height="100px",width="140px")),
+                                                                                column(10,offset=1,
+                                                                                                                                                                 
+                                                                                h3("Choose the interests that actually apply to you by clicking on them in the table. We will use this data for the rest of the tutorial. Choose 7."),verbatimTextOutput('x4'),
+                                                                                hidden(actionButton("done","Done",style="font-size:17pt;")))))),
+                                                      
+                                              ),br(),br(),
                                       
                                                 
                                               
@@ -166,21 +177,21 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                       br(),
                                       fluidRow(column(width=2,align="center"),
                                                column(width=8,
-                                                      div(img(src="youarehere.png",height="100px"),br(),
+                                                      div( uiOutput(outputId = "uploadedimage2",align="center") ,br(),
                                                           
                                                           p("My Selected Interests:"),style="text-align:center;"),
                                                       
                                                       verbatimTextOutput("collect"),br(),
                                                       p("Imagine these people are some of your friends on Facebook. ",style="color:black;text-align:center"),
                                                       br(),
-                                                      div(actionButton("generate_avatar","Regenerate Avatars",style="margin-bottom:2%;margin-top:1%;font-size:12pt;"),style="text-align:center"),
-                                                      p(strong("Write in the names of your 'friends' below."),style="text-align:center;"),br(),
+                                                      p(strong("Write in the names of your 'friends' below."),style="text-align:center;"),
                                                       p("(it helps you to remember who is who)",style="text-align:center;"),
+                                                      div(actionButton("generate_avatar","Regenerate Avatars",style="margin-bottom:2%;margin-top:1%;font-size:12pt;"),style="text-align:center"),
                                                       div(
                                                               div(column(3,
-                                                                         div(textInput("user", "", "Me"),
+                                                                         div(textInput("user", "", "MyName"),
                                                                              textOutput("username"),
-                                                                             uiOutput(outputId = "renderuserimage"),
+                                                                             uiOutput(outputId = "renderuserimage",align="center"),
                                                                              br(),
                                                                              #div(verbatimTextOutput("friend1"),style="margin-top:10px;text-align:left;"),
                                                                              style="text-align:center;"),
@@ -218,7 +229,8 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                                              
                                                               
                                                               style="text-align: center;"),
-                                                      
+                                                      br(),
+                                                      br(),
                                                       actionButton("step2next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
                                                       br(),
                                                       style="text-align: center;" ),
@@ -235,7 +247,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  fluidRow(column(width=2),
                           column(
                                   h1("Your Friends' Generated Interests",style="color:black;text-align:center"),
-                                  p("These friends each have some interests similar to yours. Here, we have randomly generated some interests from your selected interests that you and these friends might have in common. On Facebook, they would have access to the real interest information about your friends.",style="color:black;text-align:justify"),
+                                  p("These friends each have some interests similar to yours. For this tutorial, they are not true friends from Facebook. On Facebook, they would have access to the real information about your friends and their friends.",style="color:black;text-align:justify"),
                                   br(),
                                   width=8),
                  ),
@@ -246,7 +258,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                          div(column(3,
                                                     
                                                     div(textOutput("username_2"),style="text-align:center;",
-                                                        uiOutput("renderuserimage2"),),
+                                                        uiOutput("renderuserimage2",align="center"),),
                                                     br(),
                                                     div(verbatimTextOutput("collect2"),style="margin-top:10px;text-align:left;"),
                                                     style="text-align:left;")),
@@ -280,10 +292,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                          style="text-align: center;"),
                                  br(),
                                  
-                                 h3("All friends share common interests in:"),
-                                 br(),
-                                 tags$style(type='text/css', '#incommon {background-color: rgba(144,238,144,0.40); color: black;}'),
-                                 verbatimTextOutput("incommon"),
+                                 
                                  br(),
                                  actionButton("step3next", "Next",style="margin-bottom:4%;font-size:17pt;"),
                                  br(),
@@ -319,9 +328,10 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                 
                 DT::dataTableOutput("matrix"),
                 br(),
-                h3("How would you determine which of these friends are the most similar?"),
+                h3("How would you determine which of these friends are the most similar to you?"),
                 column(textAreaInput("aftermatrix","","",height="200px"),
                 br(),
+                radioButtons('whichradio', "Which friend is most similar to you?", c("1","2","3","I'm not sure", "They're all the same")),
                 br(),
                 align="center",width=12),
                 br(),
@@ -331,7 +341,11 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  
                  
         ),
-        #####################################################
+        
+        
+        ####################################################
+        
+   
         
         tabPanel(title="Step 5",value="step5",
                  
@@ -340,9 +354,9 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                        
                                 h1("Network Graph",style="color:black;text-align:center"),
                                 br(),
-                                p("Interpet this graph"),
+                                p("Interpet this graph"),align="center"),
                         
-                        visNetworkOutput("network",width="95%",height = "100vh"),
+                       div(visNetworkOutput("network",height=700),
                         br(),
                         actionButton("step5next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
                         br(),align="center",style="text-align:center;")
@@ -387,7 +401,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  
                  
         ),
-        #####################################################
+        
         #####################################################
         
         
@@ -402,7 +416,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                   br(),
                                   width=12),
                           column(
-                                  width=6, align="center",
+                                  width=5, align="center",
                                   textOutput("similar1"),
                                   br(),
                                   uiOutput(outputId = "similarimage1"),
@@ -411,11 +425,15 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                   br()
                                   
                           ),
+                          column(width=2,align="center",
+                                 br(),br(),
+                                 img(src="rightarrow.png",width="150px")
+                                 ),
                           column(
-                                  width=6, align="center",
+                                  width=5, align="center",
                                   textOutput("similar2"),
                                   br(),
-                                  uiOutput(outputId = "similarimage2"),
+                                  uiOutput(outputId = "similarimage2",align="center"),
                                   br(),
                                   verbatimTextOutput("displaysimilarity2"),
                                   br()
@@ -434,6 +452,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                           br(),
                           actionButton("step7next", "Next",style="text-align:center,margin-bottom:4%;margin-top:2%;font-size:17pt;"),
                           br(),
+                          br(),
                           
                           width=12,align="center")
                     
@@ -444,6 +463,25 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  
         ),
         #####################################################
+       
+        
+        tabPanel(title="Step 8",value="step8",
+                 
+                 
+                 column(width = 12, 
+                        
+                        h1("What Would the Algorithm Recommend?",style="color:black;text-align:center"),
+                        br(),
+                        p("You guessed X was most similar to you!"),align="center"),
+                 
+                 div(
+                         br(),
+                         actionButton("step8next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
+                         br(),align="center",style="text-align:center;")
+                 
+                 
+                 
+        ),
         
         tabPanel(title="Post-Survey",value="postsurvey",
                  htmlOutput("post")
