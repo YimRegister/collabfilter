@@ -26,17 +26,17 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                   
         #titlePanel("Learn Machine Learning on your own Facebook Data"),
         navbarPage("",id="thenav",
-        tabPanel(icon("home"),
+        tabPanel(title="Download Data",value="home",
                  
                  fluidRow(column(tags$img(src="lookingdata.png",width="100px",height="100px"),width=2),
                           column(
                                   
                                   
                                   br(),
-                                  h2(" What does Facebook think you're interested in?",style="color:black;background-color:white;padding:15px;border-radius:10px"),
+                                  h1(" What does Facebook think you're interested in?",style="color:black;background-color:white;padding:15px;border-radius:10px"),
                                   
                                   
-                                  h4("This lesson will help you learn about algorithms in the world on your own Facebook data.",style="color:black;background-color:white;padding:15px;border-radius:10px"),
+                                  h3("This lesson will help you learn about algorithms in the world on your own Facebook data.",style="color:black;background-color:white;padding:15px;border-radius:10px"),
                                   
                                   width=8),
                           ),
@@ -81,7 +81,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
         tabPanel(title="Intro",value="intro",
          column(
                 h2("Facebook collects a lot of data about you. They use this data to organize your news feed, recommend advertisements, suggest new friends, and more.",align="left"),
-                 strong("We do not save any of your Facebook data for this research study. It is for you to look at only."),
+                p("We do not save any of your Facebook data for this research study. It is for you to look at only."),
                 
                 br(),
                 
@@ -472,16 +472,41 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                         
                         h1("What Would the Algorithm Recommend?",style="color:black;text-align:center"),
                         br(),
-                        p("You guessed X was most similar to you!"),align="center"),
+                        p("Demonstrate what you learned by selecting what the algortihm would recommend from their interests to you."),align="center"),
                  
-                 div(
+                 div(column(4,
+                            
+                            div(textOutput("username_3"),style="text-align:center;",
+                                uiOutput("renderuserimage3",align="center")),
+                            br(),
+                            div(verbatimTextOutput("collect3"),style="margin-top:10px;text-align:left;"),
+                            style="text-align:left;")),
+                 div(column(4,
+                            div(p("
+                                  A New Friend",style="font-weight:normal;font-size:11pt;"),
+                            img(src="newfriend.png",width="100px"),style="text-align:center;"),
+                            br(),
+                            div(verbatimTextOutput("renderother"),style="margin-top:10px;text-align:left;"),
+                            style="text-align:left;")),
+                 
+                 div(column(4,
+                            
+                            uiOutput("checkboxanswers")
+                            )),
+                 
+               br(),
+        
+                 column(width=12,
+                
                          br(),
                          actionButton("step8next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
-                         br(),align="center",style="text-align:center;")
+                         br(),align="center",style="text-align:center;"
+                 
+                 ))
                  
                  
                  
-        ),
+        ,
         
         tabPanel(title="Post-Survey",value="postsurvey",
                  htmlOutput("post")

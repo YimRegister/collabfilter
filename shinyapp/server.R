@@ -141,8 +141,7 @@ observeEvent(input$adsfile,{
     
 grab_answer_from_matrx <- reactive({
   
-   print(input$aftermatrix)
-   print(typeof(input$aftermatrix))
+   
    values$presurvey_data$HowSimilarity <-as.character(input$aftermatrix)
    
  })
@@ -155,14 +154,14 @@ output$maketable <- DT::renderDataTable(
 )
 
 
-output$renderuserimage <- output$renderuserimage2 <- renderUI({
+output$renderuserimage <- output$renderuserimage2 <- output$renderuserimage3 <-renderUI({
   srcstring = img()
   
   if(!is.null(input$userphoto)){
     req(input$userphoto)
-    print(input$userphoto$datapath)
+    #print(input$userphoto$datapath)
     srcstring = gsub("\\\\", "/", input$userphoto$datapath)
-    print(srcstring)
+    #print(srcstring)
     
   }
   else{
@@ -243,7 +242,7 @@ collect <- reactive({
   return(as.character(makedata()$Interest[input$maketable_rows_selected]))
   
 })
-output$collect <-output$collect2<- renderPrint({
+output$collect <-output$collect2<- output$collect3 <- renderPrint({
                   cat(sort(collect()),sep="\n")
           })
 
@@ -332,7 +331,7 @@ output$friend3 <- output$friend3_2 <-renderPrint({
 output$name1value <- output$name1value_2 <- renderText({ input$name1 })
 output$name2value <- output$name2value_2 <- renderText({ input$name2 })
 output$name3value <- output$name3value_2 <- renderText({ input$name3 })
-output$username <- output$username_2 <- renderText({ input$user })
+output$username <- output$username_2 <-output$username_3 <-renderText({ input$user })
 
 common <- reactive({
   common1_2 <- Reduce(intersect, list(sample1(),sample2()))
@@ -370,7 +369,7 @@ make_matrix <- reactive({
              rep(input$user,length(collect()))
              
              )
-  print(friends)
+  #print(friends)
   prefs <-c(sample1(),sample2(),sample3(),collect())
 
   
@@ -472,7 +471,11 @@ get_cosine_similarity <- reactive({
   
 })
 
+  
+
+
 output$combos <-renderTable(
+  #organize where the name is
   get_cosine_similarity()
 )
 
@@ -664,7 +667,7 @@ output$network <-renderVisNetwork({
   #my ID is length+2
   friend2 <- c(length+2,as.character(similarity2()$friends[1]),"secondfriend",font.size=c(20)) #me
   nodes <- rbind(nodes,friend2)
-  View(nodes)
+  
   
   
   
@@ -676,7 +679,7 @@ output$network <-renderVisNetwork({
   #the suggestions belong to the friend, and will be suggested to me
   
   ids <- nodes$id[nodes$group=="Suggest"]
-  print(ids)
+  #print(ids)
   
   edges3<-data.frame(from=ids,to=length+1,label="",color="black",arrows="",dashes=c("FALSE"),font.size=c(20))
   edges <-rbind(edges,edges3)
@@ -688,7 +691,7 @@ output$network <-renderVisNetwork({
   
   edges$dashes <- as.logical(edges$dashes)
   #bug, we need to ENSURE myname is secondfriend
-  View(edges)
+  
   
   imageforfriend <- images_and_names$imagesdf$Image[images_and_names$imagesdf$Name == similarity1()$friends[1]]
   
@@ -701,7 +704,6 @@ output$network <-renderVisNetwork({
     visGroups(groupname = "Suggest",color="#39D11A",font.size=c(20)) %>%
     visGroups(groupname = "firstfriend", shape = "circularImage", image=imageforfriend,size=50) %>%
     visGroups(groupname = "secondfriend", shape = "circularImage", image=img(),size=50) %>%
-    #visHierarchicalLayout()%>%
     visNodes(shapeProperties = list(useBorderWithImage = TRUE))%>%
     visOptions(selectedBy = "group")%>%
     visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = F) %>%
@@ -724,6 +726,32 @@ output$network <-renderVisNetwork({
   
   
 })
+
+othersample <- reactive({
+  #take new sample
+  N = 4
+  rest = OPTIONS - N
+  restdata <- makedata()%>%
+    filter(!(row_number() %in% input$maketable_rows_selected))
+  sameasyou <- sample(as.character(makedata()$Interest[input$maketable_rows_selected]),N,replace=F)
+  therest <- sample(as.character(restdata$Interest),rest,replace=F)
+  sample <- c(sameasyou,therest)
+  sample <- sort(sample)
+  return(sample)
+})
+
+output$renderother <- renderPrint({
+ 
+  cat(othersample(),sep="\n")
+})
+
+
+output$checkboxanswers <- renderUI({
+  
+  #
+})
+  
+
 
 # the matrix of Friends and their interests
 output$matrix <- DT::renderDataTable(
@@ -845,7 +873,7 @@ presurvey <- function(...) {
   
   observeEvent(input$completed, {
     id <- create_unique_ids()
-    print(id)
+    #print(id)
     values$presurvey_data <- data.frame(matrix(ncol = 8, nrow = 0))
     names <- c(
       'Subject', 'Researchers', 'Marketing', 'OtherApps', 'Political', 'Government', 'Other'  ,'PreHowReccomend')
@@ -856,7 +884,7 @@ presurvey <- function(...) {
     values$presurvey_data[1, ] <-row
     
     
-    View(values$presurvey_data)
+    
     
     
     updateTabsetPanel(session, "thenav",
@@ -869,7 +897,13 @@ presurvey <- function(...) {
   
 postquestion_one <- function(...) {
     renderUI({ source("postquestion1.R", local = TRUE)$value })
-  }
+}
+
+postquestion_two <- function(...) {
+  renderUI({ source("postquestion2.R", local = TRUE)$value })
+}
+
+
   postsurvey <- function(...) {
     args <- list(...)
     div(class = 'container', id = "postsurvey",
@@ -887,6 +921,11 @@ postquestion_one <- function(...) {
   
   observeEvent(input$postblock_one, {
     output$post <- render_page(f = postquestion_one)
+    
+  })
+  
+  observeEvent(input$block_twopost, {
+    output$post <- render_page(f = postquestion_two)
     
   })
   
@@ -912,10 +951,14 @@ postquestion_one <- function(...) {
     
   })
   
+  
   observeEvent(input$step2next, {
     updateRadioButtons(session,"whichradio",
-    choices = c(input$name1,input$name2,input$name3, "I'm not sure", "None")
+    choices = c(input$name1,input$name2,input$name3, "I'm not sure", "They're all the same")
   )
+   
+    
+   
     updateTabsetPanel(session, "thenav",
                       selected = "step3")
     
@@ -959,6 +1002,14 @@ postquestion_one <- function(...) {
   
   
   observeEvent(input$step7next, {
+    updateTabsetPanel(session, "thenav",
+                      selected = "step8")
+    
+    
+    
+  })
+  
+  observeEvent(input$step8next, {
     updateTabsetPanel(session, "thenav",
                       selected = "postsurvey")
     

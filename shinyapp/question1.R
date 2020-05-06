@@ -1,4 +1,4 @@
-#forced choice Yes/No
+
 div(class = 'container',
     
     div(class = 'col-sm-8',
