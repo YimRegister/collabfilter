@@ -153,6 +153,10 @@ output$maketable <- DT::renderDataTable(
   
 )
 
+output$newfriendimage <- renderUI({
+  div(tags$img(src = "newfriend.png",width="100px"),height="100px",class="cover")
+  
+})
 
 output$renderuserimage <- output$renderuserimage2 <- output$renderuserimage3 <-renderUI({
   srcstring = img()
@@ -332,6 +336,9 @@ output$name1value <- output$name1value_2 <- renderText({ input$name1 })
 output$name2value <- output$name2value_2 <- renderText({ input$name2 })
 output$name3value <- output$name3value_2 <- renderText({ input$name3 })
 output$username <- output$username_2 <-output$username_3 <-renderText({ input$user })
+
+output$newfriend <- renderText("New Friend")
+
 
 common <- reactive({
   common1_2 <- Reduce(intersect, list(sample1(),sample2()))
@@ -737,8 +744,12 @@ othersample <- reactive({
   therest <- sample(as.character(restdata$Interest),rest,replace=F)
   sample <- c(sameasyou,therest)
   sample <- sort(sample)
+  
+ 
   return(sample)
 })
+
+
 
 output$renderother <- renderPrint({
  
@@ -746,10 +757,12 @@ output$renderother <- renderPrint({
 })
 
 
-output$checkboxanswers <- renderUI({
+    
+ 
   
-  #
-})
+
+
+output$select <- renderPrint(input$selectedrecs)
   
 
 
@@ -903,6 +916,10 @@ postquestion_two <- function(...) {
   renderUI({ source("postquestion2.R", local = TRUE)$value })
 }
 
+postquestion_three <- function(...) {
+  renderUI({ source("postquestion3.R", local = TRUE)$value })
+}
+
 
   postsurvey <- function(...) {
     args <- list(...)
@@ -926,6 +943,11 @@ postquestion_two <- function(...) {
   
   observeEvent(input$block_twopost, {
     output$post <- render_page(f = postquestion_two)
+    
+  })
+  
+  observeEvent(input$block_threepost, {
+    output$post <- render_page(f = postquestion_three)
     
   })
   
@@ -956,6 +978,9 @@ postquestion_two <- function(...) {
     updateRadioButtons(session,"whichradio",
     choices = c(input$name1,input$name2,input$name3, "I'm not sure", "They're all the same")
   )
+    updateSelectInput(session, "selectedrecs",
+                      
+                      choices = as.list(othersample()))
    
     
    
@@ -967,6 +992,7 @@ postquestion_two <- function(...) {
   })
   
   observeEvent(input$step3next, {
+    
     updateTabsetPanel(session, "thenav",
                       selected = "step4")
     

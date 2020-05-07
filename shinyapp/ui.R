@@ -473,28 +473,32 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                         h1("What Would the Algorithm Recommend?",style="color:black;text-align:center"),
                         br(),
                         p("Demonstrate what you learned by selecting what the algortihm would recommend from their interests to you."),align="center"),
+                 br(),
                  
+                 div(column(4,
+                            div(textOutput("newfriend"),style="text-align:center;",
+                                br(),
+                                uiOutput("newfriendimage",align="center")),
+                            br(),
+                            div(verbatimTextOutput("renderother"),style="margin-top:10px;text-align:left;"),
+                            style="text-align:left;")),
                  div(column(4,
                             
                             div(textOutput("username_3"),style="text-align:center;",
+                                br(),
                                 uiOutput("renderuserimage3",align="center")),
                             br(),
                             div(verbatimTextOutput("collect3"),style="margin-top:10px;text-align:left;"),
                             style="text-align:left;")),
-                 div(column(4,
-                            div(p("
-                                  A New Friend",style="font-weight:normal;font-size:11pt;"),
-                            img(src="newfriend.png",width="100px"),style="text-align:center;"),
-                            br(),
-                            div(verbatimTextOutput("renderother"),style="margin-top:10px;text-align:left;"),
-                            style="text-align:left;")),
+                
                  
                  div(column(4,
-                            
-                            uiOutput("checkboxanswers")
-                            )),
+                        hr(),
+                        p("Select the interests that would be recommended to you from your new friend:"),
+                        selectInput('selectedrecs', 'Options', choices=NULL, multiple=TRUE, selectize=TRUE)
+                 ),
                  
-               br(),
+               br()),
         
                  column(width=12,
                 
