@@ -24,19 +24,37 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                           tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
                   ),
                   
-        #titlePanel("Learn Machine Learning on your own Facebook Data"),
+         #hide tabs to start
+         tags$head(tags$style(HTML("#thenav li a[data-value = 'home'],
+                                   #thenav li a[data-value = 'intro'], 
+                                   #thenav li a[data-value = 'presurvey'],
+                                   #thenav li a[data-value = 'step1'],
+                                   #thenav li a[data-value = 'step2'],
+                                   #thenav li a[data-value = 'step3'],
+                                   #thenav li a[data-value = 'step4'],
+                                   #thenav li a[data-value = 'step5'],
+                                   #thenav li a[data-value = 'step6'],
+                                   #thenav li a[data-value = 'step7'],
+                                   #thenav li a[data-value = 'step8'],
+                                   #thenav li a[data-value = 'postsurvey']
+                                   {display: none;}"))),
         navbarPage("",id="thenav",
         tabPanel(title="Download Data",value="home",
+                 
                  
                  fluidRow(column(tags$img(src="lookingdata.png",width="100px",height="100px"),width=2),
                           column(
                                   
                                   
                                   br(),
-                                  h1(" What does Facebook think you're interested in?",style="color:black;background-color:white;padding:15px;border-radius:10px"),
+                                  h1("How does Facebook learn what you are interested in?",style="color:black;background-color:white;padding:15px;border-radius:10px"),
                                   
                                   
-                                  h3("This lesson will help you learn about algorithms in the world on your own Facebook data.",style="color:black;background-color:white;padding:15px;border-radius:10px"),
+                                  h3("This interactive data science lesson will introduce you to some of the algorithms that work behind the scenes to help companies like Facebook learn about you, its user, in order to show content and ads you are likely to be interest in.",style="color:black;background-color:white;padding:15px;border-radius:10px"),
+                                  
+                                  br(),
+                                  
+                                  h3("We will explore some of these algorithms using your own data! We do not save any of your personal Facebook data for this research study. It is for you to look at only. "),
                                   
                                   width=8),
                           ),
@@ -46,7 +64,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                           column(
                          br(),
                          
-                         p("You can download a zip file of your data by following these instructions:",
+                         p("Download a zip file of your data by following these instructions:",
                            br(),
                            a(href="https://www.facebook.com/help/212802592074644", "How to Download Your Facebook Data",target="_blank",style="color:#4287f5"),style="color:black"),
                            br(),
@@ -54,19 +72,21 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                         img(src="download.png",width="70%"),
                         br(),
                         br(),
-                        p("There are lots of things available for download:"),
-                        img(src="all.png",width="70%"),
-                        br(),
-                        br(),
-                        p("But for this tutorial you only need Ads and Businesses:"),
+                        p("There are lots of things available for download, but today we will use the Ads and Businesses data. "),
                         img(src="ads_and_bus.png",width="70%"),
+                        
+                        br(),
+                        br(),
+                        p("You might also see the following, but we don't need these today."),
+                        img(src="all.png",width="70%"),
                         br(),br(),
-                        p("Extract the zip file and look for the folder 'ads_and_businesses'. Don't look at anything yet."),
+                        p("Extract, or 'unzip' the file that downloads, and our should see a folder called 'ads_and_businesses'. You will upload a file from here at a later step. Please don't look inside yet!"),
                         img(src="ads_interests.png",width="50%"),
                         br(),br(),
-                        p("We do not save any of your Facebook data for this research study. It is for you to look at only."),
+                        p("Remember this is your personal data and we will not save it as part of this research study."),
                         br(),
-                        actionButton("homenext", "Next",style="margin-bottom:4%;font-size:17pt;"),
+                        
+                        actionButton("homenext", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                         br(),
                          width=8),
                          
@@ -81,22 +101,24 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
         tabPanel(title="Intro",value="intro",
          column(
                 h2("Facebook collects a lot of data about you. They use this data to organize your news feed, recommend advertisements, suggest new friends, and more.",align="left"),
-                p("We do not save any of your Facebook data for this research study. It is for you to look at only."),
+                p("In the following step, you will see your own data, but it is for you to look at only. We will not see it. "),
                 
                 br(),
                 
-                h3("To get started, upload an image you'd like to use for yourself. We do not save this either."),
+                h3("To get started, upload an image you'd like to use for yourself. This will allow you to personalize your experience and remember who is who in the tutorial. We will not save this image. "),
+                h4("You may opt not to do this, and will use the default image instead. Just click Next to continue."),
                 fileInput("myFile", "Choose a file", accept = c('image/png', 'image/jpeg')),
                 uiOutput(outputId="uploadedimage"),
                 br(),br(),
-                actionButton("intronext", "Next",style="margin-bottom:4%;font-size:17pt;"),
+                actionButton("introback", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                actionButton("intronext", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                 br(),
                 
                 width=8,offset=2)
         ),
         
         ###############################################################################################
-        tabPanel(title="Pre-Survey",value="presurvey",
+        tabPanel(title="Background Questions",value="presurvey",
                  htmlOutput("pre")
         ),
         
@@ -146,9 +168,12 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                                                                 column(10,offset=1,
                                                                                                                                                                  
                                                                                 h3("Choose the interests that actually apply to you by clicking on them in the table. We will use this data for the rest of the tutorial. Choose 7."),verbatimTextOutput('x4'),
-                                                                                hidden(actionButton("done","Done",style="font-size:17pt;")))))),
+                                                                                #hidden(actionButton("done","Next",style="font-size:17pt;float:right;"))
+                                                                                )))),
                                                       
                                               ),br(),br(),
+                                      actionButton("introback", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                                      disabled(actionButton("done", "Next",style="margin-bottom:4%;font-size:17pt;float:right;")),
                                       
                                                 
                                               
@@ -182,7 +207,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                                           p("My Selected Interests:"),style="text-align:center;"),
                                                       
                                                       verbatimTextOutput("collect"),br(),
-                                                      p("Imagine these people are some of your friends on Facebook. ",style="color:black;text-align:center"),
+                                                      p("Imagine these people are some of your friends on Facbeook. We will use these friends to learn how Facebook's algorithms guess at your likely interests.  ",style="color:black;text-align:center"),
                                                       br(),
                                                       p(strong("Write in the names of your 'friends' below."),style="text-align:center;"),
                                                       p("(it helps you to remember who is who)",style="text-align:center;"),
@@ -231,7 +256,8 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                                               style="text-align: center;"),
                                                       br(),
                                                       br(),
-                                                      actionButton("step2next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
+                                                      actionButton("step2back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                                                      actionButton("step2next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                                                       br(),
                                                       style="text-align: center;" ),
                                                
@@ -247,7 +273,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  fluidRow(column(width=2),
                           column(
                                   h1("Your Friends' Generated Interests",style="color:black;text-align:center"),
-                                  p("These friends each have some interests similar to yours. For this tutorial, they are not true friends from Facebook. On Facebook, they would have access to the real information about your friends and their friends.",style="color:black;text-align:justify"),
+                                  p("These friends each have some interest which may be similar to yours. Some interests might be identical, others might be close or related in some way. For this lesson, they are not true friends from Facebook. On Facebook, they would have access to the real information about your friends and their friends.",style="color:black;text-align:justify"),
                                   br(),
                                   width=8),
                  ),
@@ -294,11 +320,13 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                  
                                  
                                  br(),
-                                 actionButton("step3next", "Next",style="margin-bottom:4%;font-size:17pt;"),
-                                 br(),
+                                 
                                  
                                 
-                                 style="text-align: center;"  )
+                                 style="text-align: center;"  ),
+                 actionButton("step3back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                 actionButton("step3next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;")
+                 
                           
                         
                  
@@ -312,7 +340,7 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  
                  column(width = 8,offset=2, 
                           column(
-                                  h1("What You're All Interested In",style="color:black;text-align:center"),
+                                  h1("Where Do Interests Overlap?",style="color:black;text-align:center"),
                                   br(),
                                   p("This is how data often gets represented so that machines can read it. It is a chart with the Friends across the top and the Interests along the side. A ",strong("0")," means that the friend in that column has", strong("NOT"),"shown interest in that thing. A ",strong("1")," means the friend ",strong("IS"), "interested in that thing."),
                                  br(),br()
@@ -331,11 +359,12 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                 h3("How would you determine which of these friends are the most similar to you?"),
                 column(textAreaInput("aftermatrix","","",height="200px"),
                 br(),
-                radioButtons('whichradio', "Which friend is most similar to you?", c("1","2","3","I'm not sure", "They're all the same")),
+                radioButtons('whichradio', "Which friend is most similar to you?", c("1","2","3","I'm not sure", "They're all the same","None selected"),selected=c("None selected")),
                 br(),
                 align="center",width=12),
                 br(),
-                actionButton("step4next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
+                actionButton("step4back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                actionButton("step4next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                 br(),align="center",style="text-align:center;")
                  
                  
@@ -354,11 +383,12 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                        
                                 h1("Network Graph",style="color:black;text-align:center"),
                                 br(),
-                                p("Interpet this graph"),align="center"),
+                                p("This network demonstrates which interests would be recommended to you."),align="center"),
                         
                        div(visNetworkOutput("network",height=700),
                         br(),
-                        actionButton("step5next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
+                        actionButton("step5back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                        actionButton("step5next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                         br(),align="center",style="text-align:center;")
                  
                  
@@ -387,11 +417,14 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                                    )
                                    ),
                                    textOutput("mostsimilar"),
+                                   br(),
+                                   br()
                                    
                           ),
                           
                           br(),
-                          actionButton("step6next", "Next",style="text-align:center,margin-bottom:4%;margin-top:2%;font-size:17pt;"),
+                          actionButton("step6back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                          actionButton("step6next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                           br(),
                 align="center" ),
                
@@ -450,7 +483,8 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                           ),
                           
                           br(),
-                          actionButton("step7next", "Next",style="text-align:center,margin-bottom:4%;margin-top:2%;font-size:17pt;"),
+                          actionButton("step7back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                          actionButton("step7next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
                           br(),
                           br(),
                           
@@ -503,8 +537,9 @@ shinyUI(fluidPage(useShinyjs(),theme = shinytheme("cosmo"),
                  column(width=12,
                 
                          br(),
-                         actionButton("step8next", "Next",style="margin-bottom:4%;margin-top:2%;font-size:17pt;"),
-                         br(),align="center",style="text-align:center;"
+                        actionButton("step8back", "Back",style="margin-bottom:4%;font-size:17pt;float:left;"),
+                        actionButton("step8next", "Next",style="margin-bottom:4%;font-size:17pt;float:right;"),
+                        br(),align="center",style="text-align:center;"
                  
                  ))
                  

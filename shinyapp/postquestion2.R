@@ -1,9 +1,9 @@
 div(class = 'container',
    
     div(class = 'col-sm-8',
-        h2("After looking at what Facebook thinks you're interested in, how do you think Facebook is determining those interests?"),
+        h2("After participating in this lesson, how do you think Facebook comes up with the list of topics that it thinks you might be interested in?"),
         textAreaInput("postquestion2", "", "",rows=10,cols=50),
-        actionButton("block_threepost", "Next",style="font-size:17pt;"),
+        actionButton("block_threepost", "Next",style="font-size:17pt;float;right;"),
         br()
     )
 )

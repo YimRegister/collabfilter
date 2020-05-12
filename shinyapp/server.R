@@ -90,8 +90,9 @@ cosine_similarity <- function(a,b){
 ##########################################################################################
 shinyServer(function(input, output,session) {
   
+  
  
-values <- reactiveValues( presurvey_data=NULL
+values <- reactiveValues( response_data=NULL
   
 )
 
@@ -142,9 +143,18 @@ observeEvent(input$adsfile,{
 grab_answer_from_matrx <- reactive({
   
    
-   values$presurvey_data$HowSimilarity <-as.character(input$aftermatrix)
+   values$response_data$HowSimilarity <-as.character(input$aftermatrix)
+   View(values$response_data)
    
  })
+
+observeEvent(input$whichradio,{
+  
+  values$response_data$SelectedSimilar <- as.character(input$whichradio)
+  View(values$response_data)
+  #we also need to record the correct answer, this should be the friend with the highest similarity
+  
+})
 
 output$maketable <- DT::renderDataTable(
   
@@ -223,8 +233,9 @@ output$x4 = renderPrint({
     cat('The interests you chose:\n\n')
     cat(as.character(makedata()$Interest[s]),sep="\n",fill=TRUE)
     
-    shinyjs::show("done")
+    
     shinyjs::disable("done")
+    
     
     if(length(s)==OPTIONS){
       shinyjs::enable("done")
@@ -247,7 +258,9 @@ collect <- reactive({
   
 })
 output$collect <-output$collect2<- output$collect3 <- renderPrint({
-                  cat(sort(collect()),sep="\n")
+                  cat("\n")
+                  cat(
+                    sort(collect()),sep="\n")
           })
 
 
@@ -644,7 +657,7 @@ output$network <-renderVisNetwork({
  
   
   nodes <- data.frame(id = 1:length(incommon$prefs), label = incommon$prefs, 
-                      group = "In Common",font.size=c(20)) #me
+                      group = "In Common",font.size=c(20),level=2) #me
   
  
   
@@ -659,7 +672,7 @@ output$network <-renderVisNetwork({
   
  
   nodes2<-data.frame(id = ids, label = overlap$prefs, 
-                     group = "Suggest",font.size=c(20)) #friend
+                     group = "Suggest",font.size=c(20),level=2) #friend
   
   
   nodes <- rbind(nodes,nodes2)
@@ -668,11 +681,11 @@ output$network <-renderVisNetwork({
   nodes$group <- as.character(nodes$group)
   
   #friend1 ID is length+1
-  friend1 <- c(length+1,as.character(similarity1()$friends[1]),"firstfriend",font.size=c(20)) #friend
+  friend1 <- c(length+1,as.character(similarity1()$friends[1]),"firstfriend",font.size=c(20),level=1) #friend
   nodes <- rbind(nodes,friend1)
   
   #my ID is length+2
-  friend2 <- c(length+2,as.character(similarity2()$friends[1]),"secondfriend",font.size=c(20)) #me
+  friend2 <- c(length+2,as.character(similarity2()$friends[1]),"secondfriend",font.size=c(20),level=3) #me
   nodes <- rbind(nodes,friend2)
   
   
@@ -691,7 +704,7 @@ output$network <-renderVisNetwork({
   edges3<-data.frame(from=ids,to=length+1,label="",color="black",arrows="",dashes=c("FALSE"),font.size=c(20))
   edges <-rbind(edges,edges3)
   
-  edges4<-data.frame(from=ids,to=length+2,label="Suggest",color="#39D11A",arrows="to",dashes=c("FALSE"),font.size=c(20))
+  edges4<-data.frame(from=ids,to=length+2,label="Suggest",color="#39D11A",arrows="to",dashes=c("TRUE"),font.size=c(20))
   edges <-rbind(edges,edges4)
   
  
@@ -717,8 +730,9 @@ output$network <-renderVisNetwork({
     visOptions(highlightNearest = list(enabled =TRUE, degree = 2, hover = T)) %>%
     visLayout(randomSeed = 4, improvedLayout = TRUE) %>%
     addFontAwesome()%>%
-    visPhysics(solver = "forceAtlas2Based",
-               forceAtlas2Based = list(gravitationalConstant = -300))
+    visHierarchicalLayout(direction = "LR", levelSeparation = 500)
+   # visPhysics(solver = "forceAtlas2Based",
+               #forceAtlas2Based = list(gravitationalConstant = -300))
  
  visExport(
    graph,
@@ -752,7 +766,7 @@ othersample <- reactive({
 
 
 output$renderother <- renderPrint({
- 
+ cat("\n")
   cat(othersample(),sep="\n")
 })
 
@@ -822,8 +836,8 @@ presurvey <- function(...) {
   div(class = 'container', id = "presurvey",
      
       div(class = 'col-sm-8',
-          h1("Survey"),
-          p("Before exploring your data, please complete the following survey. "),
+          h1("Background Questions"),
+          p("Before exploring your data, please answer the following questions. "),
           br(),
           actionButton("block_one", "Start",style="font-size:17pt;")
       ))
@@ -887,14 +901,14 @@ presurvey <- function(...) {
   observeEvent(input$completed, {
     id <- create_unique_ids()
     #print(id)
-    values$presurvey_data <- data.frame(matrix(ncol = 8, nrow = 0))
+    values$response_data <- data.frame(matrix(ncol = 9, nrow = 0))
     names <- c(
-      'Subject', 'Researchers', 'Marketing', 'OtherApps', 'Political', 'Government', 'Other'  ,'PreHowReccomend')
-    colnames(values$presurvey_data) <- names
+      'Subject', 'Researchers', 'Marketing', 'OtherApps', 'Political', 'Government', 'NotWilling','Other','PreHowReccomend')
+    colnames(values$response_data) <- names
     
     
-    row <- c(id,input$checkbox1, input$checkbox2, input$checkbox3, input$checkbox4, input$checkbox5, input$writein, input$question2)
-    values$presurvey_data[1, ] <-row
+    row <- c(id,input$checkbox1, input$checkbox2, input$checkbox3, input$checkbox4, input$checkbox5, input$checkbox6, input$writein,  input$question2)
+    values$response_data[1, ] <-row
     
     
     
@@ -973,10 +987,20 @@ postquestion_three <- function(...) {
     
   })
   
+  observeEvent(input$introback, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "home")
+    
+    
+    
+  })
+  
   
   observeEvent(input$step2next, {
     updateRadioButtons(session,"whichradio",
-    choices = c(input$name1,input$name2,input$name3, "I'm not sure", "They're all the same")
+    choices = c(input$name1,input$name2,input$name3, "I'm not sure", "They're all the same","None selected"),
+    selected=c("None selected")
   )
     updateSelectInput(session, "selectedrecs",
                       
