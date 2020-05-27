@@ -5,6 +5,6 @@ account: yimregister
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1962698
-bundleId: 3133695
+bundleId: 3168220
 url: https://yimregister.shinyapps.io/shinyapp/
-when: 1589232016.67302
+when: 1589928068.72056

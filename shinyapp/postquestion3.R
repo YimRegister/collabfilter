@@ -1,9 +1,9 @@
 div(class = 'container',
     
     div(class = 'col-sm-8',
-        h2("Thank you for participating in this study!"),
-        h3(" You're all done, and can close the window now."),
-        
+        h2("Did you find anything surprising in your data?"),
+        textAreaInput("postquestion3", "", "",rows=10,cols=50),
+        actionButton("block_fourpost", "Next",style="font-size:17pt;float;right;"),
         br()
     )
 )

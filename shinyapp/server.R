@@ -143,16 +143,23 @@ observeEvent(input$adsfile,{
 grab_answer_from_matrx <- reactive({
   
    
-   values$response_data$HowSimilarity <-as.character(input$aftermatrix)
-   View(values$response_data)
+   values$response_data$HowMatrix <-as.character(input$aftermatrix)
+   
    
  })
 
 observeEvent(input$whichradio,{
   
   values$response_data$SelectedSimilar <- as.character(input$whichradio)
-  View(values$response_data)
+  
   #we also need to record the correct answer, this should be the friend with the highest similarity
+  d<- get_cosine_similarity()[1,]
+  
+  
+  name <- str_extract(d$Name1,"(\\w+)") #friend
+  othername <- str_extract(d$Name2,"(\\w+)") #me
+  similarity <-round( d[3],2)
+  values$response_data$CorrectSimilar <- as.character(name)
   
 })
 
@@ -517,13 +524,13 @@ output$explainsimilar <- renderPrint({
   d<- get_cosine_similarity()[1,]
   
  
-  name <- str_extract(d$Name1,"(\\w+)") 
-  othername <- str_extract(d$Name2,"(\\w+)") 
+  name <- str_extract(d$Name1,"(\\w+)") #friend
+  othername <- str_extract(d$Name2,"(\\w+)") #me
   similarity <-round( d[3],2)
  
   
   cat(
-    paste("Because <strong>" ,name, "</strong> and <strong>", othername, "</strong> are most similar, now we can recommend Ads to <strong>", name, "</strong> based on <strong>", othername,"</strong>'s Ad Preferences. That is a very simple explanation of the collaborative filtering algorithm.")
+    paste("Because <strong>" ,name, "</strong> and <strong>", othername, "</strong> are most similar, now we can recommend Ads to <strong>", othername, "</strong> based on <strong>", name,"</strong>'s Ad Preferences. That is a very simple explanation of the collaborative filtering algorithm.")
   )
 })
 
@@ -934,6 +941,14 @@ postquestion_three <- function(...) {
   renderUI({ source("postquestion3.R", local = TRUE)$value })
 }
 
+postquestion_four <- function(...) {
+  renderUI({ source("postquestion4.R", local = TRUE)$value })
+}
+
+postquestion_five <- function(...) {
+  renderUI({ source("postquestion5.R", local = TRUE)$value }) #thanks and goodbye
+}
+
 
   postsurvey <- function(...) {
     args <- list(...)
@@ -942,7 +957,8 @@ postquestion_three <- function(...) {
             h1("Please complete this post survey."),
             p("In order to be compensated for this study, please fill out a few questions after completing the tutorial. "),
             br(),
-            actionButton("postblock_one", "Start",style="font-size:17pt;")
+            actionButton("postsurveyback", "Back",style="font-size:17pt;float:left;"),
+            actionButton("postblock_one", "Start",style="font-size:17pt;float:right;")
         ))
     
   }
@@ -953,19 +969,64 @@ postquestion_three <- function(...) {
   observeEvent(input$postblock_one, {
     output$post <- render_page(f = postquestion_one)
     
+    
   })
+  
+  # Who would you share your data with?
   
   observeEvent(input$block_twopost, {
     output$post <- render_page(f = postquestion_two)
     
-  })
-  
-  observeEvent(input$block_threepost, {
-    output$post <- render_page(f = postquestion_three)
+    #collect from previous
+    values$response_data$ResearchersPost <- input$checkbox1post
+    
+    values$response_data$MarketingPost <- input$checkbox2post
+    
+    values$response_data$OtherAppsPost <- input$checkbox3post
+    
+    values$response_data$PoliticalPost <- input$checkbox4post
+    
+    values$response_data$GovernmentPost <- input$checkbox5post
+    
+    values$response_data$NotWillingPost <- input$checkbox6post
+    
+    values$response_data$OtherPost <- input$writeinpost
+    
+    
+    
+      
     
   })
   
+  # How does FB gather what you're interested in?
+  observeEvent(input$block_threepost, {
+    output$post <- render_page(f = postquestion_three)
+    
+    #collect from previous
+    values$response_data$PostHowRecommend <- as.character(input$postquestion2)
+   
+    
+  })
   
+  # Was anything surprising in your data?
+  observeEvent(input$block_fourpost, {
+    output$post <- render_page(f = postquestion_four)
+    
+    #collect from previous
+    values$response_data$Surprising <- as.character(input$postquestion3)
+   
+    
+  })
+  
+  # Imagine harmful. What you gonna do?
+  observeEvent(input$block_fivepost, {
+    output$post <- render_page(f = postquestion_five)
+    
+    #collect from previous
+    values$response_data$HarmfulScenario <- as.character(input$postquestion4)
+    
+    
+  })
   
   
 
@@ -1015,10 +1076,29 @@ postquestion_three <- function(...) {
     
   })
   
+  observeEvent(input$step2back, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "intro")
+    
+    
+    
+  })
+  
+  
   observeEvent(input$step3next, {
     
     updateTabsetPanel(session, "thenav",
                       selected = "step4")
+    
+    
+    
+  })
+  
+  observeEvent(input$step3back, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "step2")
     
     
     
@@ -1033,6 +1113,16 @@ postquestion_three <- function(...) {
     
   })
   
+  observeEvent(input$step4back, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "step3")
+    
+    
+    
+  })
+  
+  
   observeEvent(input$step5next, {
     updateTabsetPanel(session, "thenav",
                       selected = "step6")
@@ -1040,6 +1130,16 @@ postquestion_three <- function(...) {
     
     
   })
+  
+  observeEvent(input$step5back, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "step4")
+    
+    
+    
+  })
+  
 
   
   observeEvent(input$step6next, {
@@ -1050,6 +1150,16 @@ postquestion_three <- function(...) {
     
   })
   
+  observeEvent(input$step6back, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "step5")
+    
+    
+    
+  })
+  
+  
   
   observeEvent(input$step7next, {
     updateTabsetPanel(session, "thenav",
@@ -1059,13 +1169,60 @@ postquestion_three <- function(...) {
     
   })
   
-  observeEvent(input$step8next, {
+  observeEvent(input$step7back, {
+    
     updateTabsetPanel(session, "thenav",
-                      selected = "postsurvey")
+                      selected = "step6")
     
     
     
   })
+  
+  
+  observeEvent(input$step8next, {
+    updateTabsetPanel(session, "thenav",
+                      selected = "postsurvey")
+    
+    #need to store the response for the new friend to me selected recommendations
+    responses <- as.data.frame(input$selectedrecs,stringsAsFactors=FALSE) # the interest set the user chose
+    colnames(responses) <- c("Item")
+   
+    
+    othersample <- as.data.frame(othersample(),stringsAsFactors=FALSE)
+    colnames(othersample) <- c("Item")
+    
+    
+    collect <-as.data.frame(collect(),stringsAsFactors=FALSE)
+    colnames(collect) <-c("Item")
+   
+    correct <-  anti_join(othersample,collect)   #the correct interest set 
+   
+ 
+    
+    values$response_data$NewFriendSelected <- toString(responses$Item)
+    values$response_data$NewFriendCorrect <- toString(correct$Item)
+    
+    
+  })
+  
+  observeEvent(input$step8back, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "step7")
+    
+    
+    
+  })
+  
+  observeEvent(input$postsurveyback, {
+    
+    updateTabsetPanel(session, "thenav",
+                      selected = "step8")
+    
+    
+    
+  })
+  
   
   
   observeEvent(input$step4next,{
